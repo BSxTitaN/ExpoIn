@@ -1,0 +1,90 @@
+{
+  "project_info": {
+    "project_number": "651571145377",
+    "project_id": "expoin-4f28f",
+    "storage_bucket": "expoin-4f28f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651571145377:android:6167c44b625de7e84e5ee0",
+        "android_client_info": {
+          "package_name": "com.devlomers.dvm.expo_in"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651571145377-5fh5gdnqq7eqmo3h9068vbm2vosqnn52.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.devlomers.dvm.expo_in",
+            "certificate_hash": "2d9e7e6031f732fd38181af35d7d45ac0df076cd"
+          }
+        },
+        {
+          "client_id": "651571145377-b3tfeuhf0lf31tm5gjmli6p5rgc7j7bu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFcUTlSM5Fh5S4exNt8zPOS620g400Kxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651571145377-b3tfeuhf0lf31tm5gjmli6p5rgc7j7bu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "651571145377-mi08bgpvbumo06g5k1k59bmptbbkecs8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.devlomers.dvm.expoIn"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651571145377:android:d7c226ff806d777c4e5ee0",
+        "android_client_info": {
+          "package_name": "com.harshparekh.expoin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651571145377-b3tfeuhf0lf31tm5gjmli6p5rgc7j7bu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFcUTlSM5Fh5S4exNt8zPOS620g400Kxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651571145377-b3tfeuhf0lf31tm5gjmli6p5rgc7j7bu.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "651571145377-mi08bgpvbumo06g5k1k59bmptbbkecs8.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.devlomers.dvm.expoIn"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

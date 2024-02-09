@@ -1,127 +1,210 @@
-import 'package:expoin/Design-System/colors.dart';
+import 'package:expoin/Pages/onboarding/ui/onboarding.dart';
+import 'package:expoin/Utils/utils.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_app_check/firebase_app_check.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:provider/provider.dart';
 
-void main() {
+import 'Design-System/colors.dart';
+import 'Pages/home/ui/home.dart';
+import 'firebase_options.dart';
+
+const AndroidNotificationChannel channel = AndroidNotificationChannel(
+  'high_importance_channel', // id
+  'High Importance Notifications', // title
+  importance: Importance.high,
+);
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+FlutterLocalNotificationsPlugin();
+final FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // If you're going to use other Firebase services in the background, such as Firestore,
+  // make sure you call `initializeApp` before using other Firebase services.
+  if (kDebugMode) {
+    print('Handling a background message ${message.messageId}');
+  }
+}
+
+Future<void> main() async {
+  WidgetsBinding widgetsBinding = WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations(
+      [DeviceOrientation.portraitUp, DeviceOrientation.portraitDown]);
+  await Firebase.initializeApp(
+      name: 'CiPass', options: DefaultFirebaseOptions.currentPlatform);
+
+  FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+  await flutterLocalNotificationsPlugin
+      .resolvePlatformSpecificImplementation<
+      AndroidFlutterLocalNotificationsPlugin>()
+      ?.createNotificationChannel(channel);
+
+  await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
+      alert: true, badge: true, sound: true);
+
+  FlutterNativeSplash.preserve(widgetsBinding: widgetsBinding);
+  FlutterNativeSplash.remove();
+
+  await FirebaseAppCheck.instance.activate(
+    androidProvider:
+    kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
+    appleProvider: AppleProvider.appAttest,
+  );
+
+  if (FirebaseAuth.instance.currentUser != null) {
+    await analytics.setUserId(id: FirebaseAuth.instance.currentUser?.uid);
+  }
+
+  FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(true);
+
+  FlutterError.onError = (errorDetails) {
+    FirebaseCrashlytics.instance.recordFlutterFatalError(errorDetails);
+    FirebaseCrashlytics.instance
+        .setUserIdentifier(FirebaseAuth.instance.currentUser != null ? FirebaseAuth.instance.currentUser!.uid : "Logged-Out User/Unknown");
+  };
+  // Pass all uncaught asynchronous errors that aren't handled by the Flutter framework to Crashlytics
+  PlatformDispatcher.instance.onError = (error, stack) {
+    FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+    return true;
+  };
+
+  // Signing hash of your app
+  // String base64Hash = hashConverter.fromSha256toBase64(
+  //     "B5:A8:9E:20:C3:C6:89:30:71:C6:79:51:5C:4E:B1:16:28:F0:B0:B1:9A:07:06:AF:1F:14:00:7A:5C:62:C6:B7");
+  //
+  // // create configuration for freeRASP
+  // final config = TalsecConfig(
+  //   /// For Android
+  //   androidConfig: AndroidConfig(
+  //     packageName: 'com.harshparekh.expoin',
+  //     signingCertHashes: [
+  //       base64Hash,
+  //     ],
+  //     supportedStores: [],
+  //   ),
+  //
+  //   /// For iOS
+  //   iosConfig: IOSConfig(
+  //     bundleIds: ['YOUR_APP_BUNDLE_ID'],
+  //     teamId: 'M8AK35...',
+  //   ),
+  //
+  //   watcherMail: 'hsp22903@gmail.com',
+  //   isProd: kDebugMode ? false : true,
+  // );
+  //
+  // // Setting up callbacks
+  // final deviceInfo = await getDeviceInfo();
+  //
+  // String model = '';
+  // if (deviceInfo != null) {
+  //   // Determine the appropriate device information based on platform
+  //   if (deviceInfo is AndroidDeviceInfo) {
+  //     model = deviceInfo.model;
+  //   } else if (deviceInfo is IosDeviceInfo) {
+  //     model = deviceInfo.utsname.machine;
+  //   } else if (deviceInfo is WebBrowserInfo) {
+  //     model = deviceInfo.userAgent!;
+  //   }
+  // }
+  //
+  // // Threat callback with logging
+  // final user = FirebaseAuth.instance.currentUser;
+  // String userId = user?.uid ?? DateTime.now().toString();
+  //
+  // final callback = ThreatCallback(
+  //   onAppIntegrity: () async {
+  //     await FirebaseCrashlytics.instance.log(
+  //         "App-Integrity Error detected! Bailing out $userId. Device model: $model");
+  //   },
+  //   onObfuscationIssues: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Obfuscation issues $userId. Device model: $model");
+  //     exit(0);
+  //   },
+  //   onDebug: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Debugging $userId. Device model: $model");
+  //   },
+  //   onDeviceBinding: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Device binding $userId. Device model: $model");
+  //   },
+  //   onDeviceID: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Device ID $userId. Device model: $model");
+  //   },
+  //   onHooks: () {
+  //     FirebaseCrashlytics.instance.log("Hooks $userId. Device model: $model");
+  //   },
+  //   onPasscode: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Passcode not set $userId. Device model: $model");
+  //   },
+  //   onPrivilegedAccess: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Privileged access $userId. Device model: $model");
+  //   },
+  //   onSecureHardwareNotAvailable: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Secure hardware not available $userId. Device model: $model");
+  //   },
+  //   onSimulator: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Simulator $userId. Device model: $model");
+  //   },
+  //   onUnofficialStore: () {
+  //     FirebaseCrashlytics.instance
+  //         .log("Unofficial store $userId. Device model: $model");
+  //   },
+  // );
+  //
+  // // Attaching listener
+  // Talsec.instance.attachListener(callback);
+  //
+  // // start freeRASP
+  // await Talsec.instance.start(config);
+
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
+
+  auth() {
+    if (FirebaseAuth.instance.currentUser != null) {
+      return const Home();
+    } else {
+      return const Onboarding();
+    }
+  }
+
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ExpoIn',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: AppTheme.errAppColor), // This is how u use AppTheme Var
-        fontFamily: 'Geist', // Don't Modify this
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium, // Medium Geist Font
-            ),
-          ],
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CustomAuthProvider()),
+      ],
+      child: MaterialApp(
+        title: 'ExpoIn',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          fontFamily: "Geist",
+          colorScheme: ColorScheme.fromSeed(seedColor: AppTheme.mainAppColor),
+          useMaterial3: true,
         ),
+        home: auth(),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
